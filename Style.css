@@ -1,0 +1,149 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    background-color: #f8f9fa;
+    color: #333;
+}
+
+/* Navigation bar aligned to right */
+.premium-nav {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    padding: 15px 5%;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+}
+
+.login-btn {
+    background-color: white;
+    color: #1a2a6c;
+    border: none;
+    padding: 8px 25px;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.login-btn:hover {
+    background-color: #fdbb2d;
+    color: white;
+}
+
+/* Hero section styling */
+.hero {
+    background: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.65)), url('https://images.unsplash.com/photo-1549449662-bab394592039?auto=format&fit=crop&w=1200&q=80') no-repeat center center/cover;
+    color: white;
+    text-align: center;
+    padding: 120px 20px;
+}
+.hero h1 { font-size: 45px; margin-bottom: 15px; font-weight: 600; }
+.hero p { font-size: 18px; margin-bottom: 35px; font-weight: 300; }
+
+.search-container form { display: flex; max-width: 650px; margin: 0 auto; background: white; padding: 6px; border-radius: 50px; }
+.search-container input { width: 75%; padding: 12px 20px; border: none; outline: none; border-radius: 50px 0 0 50px; font-size: 15px; }
+.search-submit-btn { width: 25%; border: none; background: linear-gradient(135deg, #FF4169, #7A22FF); color: white; font-weight: 600; border-radius: 50px; cursor: pointer; font-size: 16px; }
+
+/* Bus search widget layout */
+.bus-widget-section { padding: 20px 5%; margin-top: -30px; }
+.widget-box { background: white; max-width: 800px; margin: 0 auto; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+.widget-box h3 { color: #1a2a6c; margin-bottom: 15px; text-align: center; }
+.widget-inputs { display: flex; gap: 15px; }
+.widget-inputs input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+.widget-inputs button { padding: 12px 25px; background-color: #ff4757; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+/* Core content layout */
+.container { padding: 40px 5%; }
+.container h2 { text-align: center; margin-bottom: 35px; color: #1a2a6c; font-size: 30px; }
+.places-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; }
+
+.single-result { grid-column: 1 / -1; max-width: 750px; margin: 0 auto; background: white; border-radius: 15px; box-shadow: 0 15px 30px rgba(0,0,0,0.1); overflow: hidden; }
+.card { background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+.card img { width: 100%; height: 240px; object-fit: cover; }
+.card-body { padding: 25px; }
+
+.place-meta { display: flex; justify-content: space-between; background: #f1f5f9; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; font-weight: 600; color: #475569; }
+.map-container iframe { width: 100%; height: 200px; border: 0; border-radius: 8px; margin-top: 10px; }
+.booking-buttons { display: flex; gap: 10px; margin-bottom: 15px; }
+.book-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: 600; font-size: 13px; }
+.bus { background-color: #ff4757; }
+.hotel { background-color: #2ed573; }
+.car { background-color: #eccc68; color: #333; }
+.share-btn { width: 100%; padding: 10px; background-color: #25d366; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+/* Blogs presentation grid */
+.blog-section { padding: 50px 5%; background-color: #fff; }
+.blog-section h2 { text-align: center; margin-bottom: 35px; color: #1a2a6c; }
+.blog-grid { display: flex; gap: 30px; justify-content: center; flex-wrap: wrap; }
+.blog-card { background: #f8f9fa; max-width: 450px; border-radius: 12px; overflow: hidden; display: flex; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.blog-card img { width: 150px; object-fit: cover; }
+.blog-content { padding: 20px; }
+.blog-content h3 { font-size: 18px; margin-bottom: 10px; color: #333; }
+.blog-content p { font-size: 14px; color: #666; line-height: 1.5; }
+
+/* Chatbot interface elements */
+.chatbot-wrapper { position: fixed; bottom: 25px; right: 25px; z-index: 1000; }
+.chatbot-toggle-btn { background: linear-gradient(135deg, #7A22FF, #FF4169); color: white; border: none; padding: 15px 25px; border-radius: 50px; font-weight: 600; font-size: 16px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+.chatbot-container { display: none; width: 320px; height: 420px; background: white; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); overflow: hidden; position: absolute; bottom: 70px; right: 0; flex-direction: column; }
+.chatbot-header { background: linear-gradient(135deg, #1a2a6c, #b21f1f); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.close-chat { cursor: pointer; font-size: 22px; }
+.chatbot-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background-color: #f1f5f9; }
+.bot-msg, .user-msg { padding: 10px 14px; border-radius: 12px; font-size: 14px; max-width: 85%; line-height: 1.4; }
+.bot-msg { background: white; color: #333; align-self: flex-start; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.user-msg { background: #7A22FF; color: white; align-self: flex-end; }
+.chatbot-input-area { display: flex; border-top: 1px solid #ddd; background: white; }
+.chatbot-input-area input { flex: 1; padding: 12px; border: none; outline: none; font-size: 14px; }
+.chatbot-input-area button { background: #1a2a6c; color: white; border: none; padding: 0 20px; font-weight: 600; cursor: pointer; }
+
+/* Modals & Footer */
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 200; }
+.modal-content { background-color: white; margin: 12% auto; padding: 40px; max-width: 400px; border-radius: 20px; position: relative; text-align: center; }
+.modal-content input { width: 100%; padding: 12px; margin: 12px 0; border: 1px solid #ddd; border-radius: 8px; }
+.close { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #999; }
+.btn { width: 100%; padding: 14px; background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+footer { background-color: #1a2a6c; color: white; text-align: center; padding: 25px; }
+/* --- Travel Route Map Styles --- */
+.map-container-section {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin: 30px auto;
+    max-width: 600px;
+}
+
+.map-container-section h2 {
+    color: #333;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+}
+
+#map {
+    border: 3px solid #007bff;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.15);
+    z-index: 1; /* ताकि मैप बाकी एलिमेंट्स के ऊपर न आए */
+}
+
+/* एनिमेटेड कार आइकॉन का साइज़ और स्टाइल */
+.animated-car-icon {
+    font-size: 24px;
+    line-height: 1;
+    text-align: center;
+    transition: transform 0.2s ease;
+}

@@ -1,0 +1,88 @@
+/* Custom Styles to supplement Tailwind CSS */
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Custom scrollbar for webkit */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Sidebar transition classes */
+.sidebar-open {
+    transform: translateX(0);
+}
+
+.sidebar-closed {
+    transform: translateX(-100%);
+}
+
+@media (min-width: 768px) {
+    .sidebar-closed {
+        transform: translateX(0);
+    }
+}
+
+/* Leaflet Map overrides */
+.leaflet-container {
+    z-index: 10 !important; /* Ensure it doesn't overlap topbar/sidebar */
+    border-radius: 0.5rem;
+}
+
+/* Data Table specific styles */
+.data-table-container {
+    overflow-x: auto;
+}
+
+.data-table th {
+    white-space: nowrap;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Toast animation */
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+.toast-enter {
+    animation: slideInRight 0.3s ease-out forwards;
+}
+
+.toast-exit {
+    animation: slideOutRight 0.3s ease-in forwards;
+}

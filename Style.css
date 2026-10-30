@@ -137,37 +137,45 @@ header {
 /* HERO SECTION */
 .hero {
     position: relative;
-    min-height: 85vh;
+    min-height: 90vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding: 60px 20px;
+    padding: 80px 20px;
     overflow: hidden;
 }
 
-/* Hero Background Image with Slow Zoom */
-.hero::before {
-    content: '';
+.hero-video {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    min-width: 100%;
+    min-height: 100%;
+    width: auto;
+    height: auto;
+    transform: translate(-50%, -50%);
+    z-index: -2;
+    object-fit: cover;
+}
+
+.hero-overlay {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(to bottom, rgba(3,3,3,0.4), rgba(3,3,3,0.85) 70%, var(--bg-base)),
-                url('https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+    background: linear-gradient(135deg, rgba(5,5,7,0.7) 0%, rgba(20,10,25,0.85) 100%);
     z-index: -1;
-    animation: slowZoom 30s linear infinite alternate;
-}
-
-@keyframes slowZoom {
-    from { transform: scale(1); }
-    to { transform: scale(1.15); }
 }
 
 .hero-content {
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
 }
 
 .tag-sub {
@@ -214,35 +222,51 @@ header {
 
 /* 3D PRODUCT SHOWCASE */
 .product-section {
-    padding: 80px 20px;
-    background: radial-gradient(circle at 50% 30%, #16221d 0%, var(--bg-base) 70%);
-    border-top: 1px solid var(--border-subtle);
+    padding: 120px 20px;
+    background: transparent;
     text-align: center;
+    position: relative;
 }
 
-.product-card-3d {
-    max-width: 400px;
+.glass-panel-product {
+    max-width: 420px;
     margin: 0 auto;
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-    padding: 30px 20px;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.9);
+    background: rgba(20, 20, 25, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 40px 25px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08);
     position: relative;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+
+.glass-panel-product:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 50px 100px rgba(0,0,0,0.8), 0 0 40px rgba(255, 20, 118, 0.1), inset 0 1px 0 rgba(255,255,255,0.15);
 }
 
 .product-img-box {
     width: 100%;
-    height: 280px;
-    background: #18231e;
-    border: 1px solid #283830;
-    border-radius: 4px;
+    height: 300px;
+    background: transparent;
+    border-radius: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.product-img-box img {
+    transition: transform 0.6s ease;
+}
+
+.glass-panel-product:hover .product-img-box img {
+    transform: scale(1.08);
 }
 
 .price-tag-badge {
@@ -272,10 +296,10 @@ header {
 
 /* CONTENT SECTIONS (About, Ingredients, Ritual) */
 .content-container {
-    max-width: 650px;
+    max-width: 700px;
     margin: 0 auto;
-    padding: 70px 24px;
-    border-top: 1px solid var(--border-subtle);
+    padding: 100px 24px;
+    border-top: 1px solid rgba(255,255,255,0.03);
 }
 
 .section-heading {

@@ -100,6 +100,25 @@ header {
     box-shadow: 0 0 12px var(--pink-glow);
 }
 
+/* Background Animation (Ambient Gradient) */
+.background-animation {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background: linear-gradient(45deg, #030303, #0a0a0a, #1a0f14, #030303);
+    background-size: 400% 400%;
+    animation: gradientBG 20s ease infinite;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 /* HERO SECTION */
 .hero {
     position: relative;
@@ -110,8 +129,30 @@ header {
     align-items: center;
     text-align: center;
     padding: 60px 20px;
+    overflow: hidden;
+}
+
+/* Hero Background Image with Slow Zoom */
+.hero::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background: linear-gradient(to bottom, rgba(3,3,3,0.4), rgba(3,3,3,0.85) 70%, var(--bg-base)),
                 url('https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+    z-index: -1;
+    animation: slowZoom 30s linear infinite alternate;
+}
+
+@keyframes slowZoom {
+    from { transform: scale(1); }
+    to { transform: scale(1.15); }
+}
+
+.hero-content {
+    z-index: 1;
 }
 
 .tag-sub {
@@ -311,5 +352,17 @@ footer {
     text-align: center;
     padding: 60px 20px;
     border-top: 1px solid var(--border-subtle);
-    background: #010101;
+    background: transparent; /* Let the animated background show */
+}
+
+/* SCROLL REVEAL ANIMATIONS */
+.reveal {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: all 1s cubic-bezier(0.5, 0, 0, 1);
+}
+
+.reveal.active {
+    opacity: 1;
+    transform: translateY(0);
 }

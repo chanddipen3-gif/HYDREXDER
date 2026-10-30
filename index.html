@@ -22,17 +22,21 @@
     <!-- ================= 1. HOME VIEW (Full Website) ================= -->
     <div id="home-view" class="view-section active-view">
         
+        <div class="background-animation"></div>
+
         <!-- Hero Section -->
-        <section class="hero">
-            <div class="tag-sub">INTRODUCING SOMACA</div>
-            <h1 class="luxury-font">The Botanical<br>Facial Kit</h1>
-            <p>A single, perfect ritual. Pure earth ingredients. Visible luminous results.</p>
-            <button class="btn-main" onclick="switchView('checkout-view')">SHOP NOW — ₹199</button>
-            <div style="margin-top: 18px; font-size: 11px; letter-spacing: 2px; color: #777; text-transform: uppercase;">50G · 10 APPLICATIONS</div>
+        <section class="hero reveal">
+            <div class="hero-content">
+                <div class="tag-sub">INTRODUCING SOMACA</div>
+                <h1 class="luxury-font">The Botanical<br>Facial Kit</h1>
+                <p>A single, perfect ritual. Pure earth ingredients. Visible luminous results.</p>
+                <button class="btn-main" onclick="switchView('checkout-view')">SHOP NOW — ₹199</button>
+                <div style="margin-top: 18px; font-size: 11px; letter-spacing: 2px; color: #777; text-transform: uppercase;">50G · 10 APPLICATIONS</div>
+            </div>
         </section>
 
         <!-- Single Product Showcase -->
-        <section class="product-section" id="shop">
+        <section class="product-section reveal" id="shop">
             <div class="product-card-3d">
                 <div class="product-img-box">
                     <div class="price-tag-badge">₹199</div>
@@ -44,15 +48,8 @@
             </div>
         </section>
 
-        <!-- About Us Section -->
-        <section class="content-container">
-            <div class="tag-sub" style="text-align: center;">OUR PHILOSOPHY</div>
-            <h2 class="luxury-font section-heading">About SOMACA</h2>
-            <p class="about-text">SOMACA stands for uncompromised purity in skincare. We reject chemical fillers and complex routines, bringing you back to sacred, earth-derived botanical rituals. Consciously crafted in India for modern luxury lovers.</p>
-        </section>
-
         <!-- Key Ingredients -->
-        <section class="content-container">
+        <section class="content-container reveal">
             <div class="tag-sub" style="text-align: center;">PURE FORMULATION</div>
             <h2 class="luxury-font section-heading">Key Ingredients</h2>
             <ul class="ingredients-grid">
@@ -64,7 +61,7 @@
         </section>
 
         <!-- The Ritual (How to Use) -->
-        <section class="content-container">
+        <section class="content-container reveal">
             <div class="tag-sub" style="text-align: center;">THE RITUAL</div>
             <h2 class="luxury-font section-heading">How to Use</h2>
 
@@ -82,9 +79,26 @@
             </div>
         </section>
 
+        <!-- About Us Section (Moved to Bottom) -->
+        <section class="content-container reveal" style="padding-bottom: 20px;">
+            <div class="tag-sub" style="text-align: center;">OUR PHILOSOPHY</div>
+            <h2 class="luxury-font section-heading">About SOMACA</h2>
+            <p class="about-text">SOMACA stands for uncompromised purity in skincare. We reject chemical fillers and complex routines, bringing you back to sacred, earth-derived botanical rituals. Consciously crafted in India for modern luxury lovers.</p>
+        </section>
+
         <!-- Footer -->
-        <footer>
-            <div class="luxury-font" style="font-size: 26px; letter-spacing: 5px; color: var(--gold); margin-bottom: 6px;">S O M A C A</div>
+        <footer class="reveal">
+            <div class="luxury-font" style="font-size: 26px; letter-spacing: 5px; color: var(--gold); margin-bottom: 12px;">S O M A C A</div>
+            <div class="social-links" style="margin-bottom: 15px;">
+                <a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 14px; letter-spacing: 1px; transition: color 0.3s ease;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 5px;">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    @somaca_botanicals
+                </a>
+            </div>
             <p style="color: #555; font-size: 11px;">© 2026 SOMACA. All rights reserved.</p>
         </footer>
     </div>

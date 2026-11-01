@@ -1,15 +1,15 @@
 :root {
-    --bg-base: #050507;
-    --bg-card: rgba(15, 15, 18, 0.7);
-    --pink-accent: #ff1476;
-    --pink-glow: rgba(255, 20, 118, 0.5);
-    --gold: #e8c872;
-    --gold-light: #fdf5df;
+    --bg-base: #070707;
+    --bg-card: rgba(15, 15, 15, 0.8);
+    --pink-accent: #D4AF37;
+    --pink-glow: rgba(212, 175, 55, 0.4);
+    --gold: #D4AF37;
+    --gold-light: #f3e7e9;
     --text-main: #fcfcfc;
     --text-muted: #a1a1aa;
-    --border-subtle: rgba(255, 255, 255, 0.1);
-    --glass-bg: rgba(20, 20, 25, 0.6);
-    --glass-border: rgba(255, 255, 255, 0.08);
+    --border-subtle: rgba(212, 175, 55, 0.2);
+    --glass-bg: rgba(15, 15, 15, 0.6);
+    --glass-border: rgba(212, 175, 55, 0.15);
 }
 
 * {
@@ -22,13 +22,68 @@
 body {
     background-color: var(--bg-base);
     color: var(--text-main);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Montserrat', sans-serif;
     overflow-x: hidden;
     line-height: 1.6;
 }
 
 .luxury-font {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+/* Tracking Timeline Styles */
+.tracking-timeline {
+    position: relative;
+    padding-left: 30px;
+    margin-top: 20px;
+}
+.tracking-timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255,255,255,0.1);
+}
+.timeline-stage {
+    position: relative;
+    margin-bottom: 25px;
+}
+.timeline-stage::before {
+    content: '';
+    position: absolute;
+    left: -24px;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #333;
+    border: 2px solid #555;
+    z-index: 1;
+}
+.timeline-stage.active::before {
+    background: var(--gold);
+    border-color: var(--gold);
+    box-shadow: 0 0 10px var(--gold);
+}
+.timeline-stage.active ~ .timeline-stage::before {
+    background: #111;
+    border-color: #333;
+    box-shadow: none;
+}
+.timeline-title {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+}
+.timeline-stage.active .timeline-title {
+    color: #fff;
+}
+.timeline-time {
+    color: #666;
+    font-size: 11px;
+    margin-top: 4px;
 }
 
 /* Particle Canvas Background */

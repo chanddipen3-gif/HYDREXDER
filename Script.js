@@ -47,7 +47,10 @@ function updateAuthUI(isLoggedIn) {
     if(authBtn) {
         if(isLoggedIn) {
             authBtn.innerText = "My Account";
-            authBtn.onclick = () => switchView('tracking-view'); // Redirect to tracking as profile for now
+            authBtn.onclick = () => {
+                populateProfileData();
+                switchView('profile-view');
+            };
         } else {
             authBtn.innerText = "Sign In";
             authBtn.onclick = () => switchView('auth-view');
@@ -62,17 +65,17 @@ function signUp() {
     const pass = document.getElementById('reg-pass').value.trim();
 
     if(!name || !email || !phone || !pass) {
-        alert("Please fill all fields for registration.");
+        showToast("Please fill all fields for registration.", "error");
         return;
     }
 
     let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
     if(users[email] || users[phone]) {
-        alert("Account already exists with this email or phone.");
+        showToast("Account already exists with this email or phone.", "error");
         return;
     }
 
-    const newUser = { name, email, phone, password: pass, orders: [] };
+    const newUser = { name, email, phone, password: pass, address: "", orders: [] };
     users[email] = newUser;
     users[phone] = newUser; // map both for easy login
 
@@ -81,7 +84,7 @@ function signUp() {
     currentUser = newUser;
 
     updateAuthUI(true);
-    alert("Welcome to House of SOMACA!");
+    showToast("Welcome to House of SOMACA!", "success");
     switchView('home-view');
 }
 
@@ -90,7 +93,7 @@ function signIn() {
     const pass = document.querySelector('#signin-section input[type="password"]').value.trim();
 
     if(!loginId || !pass) {
-        alert("Please enter login credentials.");
+        showToast("Please enter login credentials.", "error");
         return;
     }
 
@@ -101,9 +104,10 @@ function signIn() {
         localStorage.setItem('somaca_current_user', JSON.stringify(user));
         currentUser = user;
         updateAuthUI(true);
+        showToast("Welcome back to SOMACA", "success");
         switchView('home-view');
     } else {
-        alert("Invalid credentials.");
+        showToast("Invalid credentials.", "error");
     }
 }
 
@@ -182,12 +186,12 @@ function initiateRazorpay() {
     const addr = document.getElementById('cust-addr').value.trim();
 
     if(!name || !email || !phone || !addr) {
-        alert("Please fill all mandatory delivery details.");
+        showToast("Please fill all mandatory delivery details.", "error");
         return;
     }
 
     if(phone.length < 10) {
-        alert("Please enter a valid 10-digit mobile number.");
+        showToast("Please enter a valid 10-digit mobile number.", "error");
         return;
     }
 
@@ -222,20 +226,34 @@ function initiateRazorpay() {
         },
         "modal": {
             "ondismiss": function(){
-                showToast("Payment was not completed. Your order has not been placed.");
+                showToast("Payment was not completed. Your order has not been placed.", "error");
             }
         }
     };
     var rzp1 = new Razorpay(options);
     rzp1.on('payment.failed', function (response){
-        showToast("Payment failed. Please try again.");
+        showToast("Payment failed. Please try again.", "error");
     });
     rzp1.open();
 }
 
-function showToast(msg) {
-    // Simple alert for now, can be upgraded to custom toast
-    alert(msg);
+function showToast(msg, type = 'success') {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    const icon = type === 'success' ? '✨' : '⚠️';
+    toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
+
+    container.appendChild(toast);
+
+    setTimeout(() => {
+        if (container.contains(toast)) {
+            container.removeChild(toast);
+        }
+    }, 3000);
 }
 
 // ================= POST-PAYMENT / CONFIRMATION LOGIC =================
@@ -301,7 +319,7 @@ function handleSuccessfulPayment(paymentId, name, email, phone, addr, total, ite
 
 function printInvoice() {
     if(!currentOrder) {
-        alert("No active order to print.");
+        showToast("No active order to print.", "error");
         return;
     }
 
@@ -356,7 +374,7 @@ function printInvoice() {
 function searchOrder() {
     const input = document.getElementById('track-search-input').value.trim();
     if(!input) {
-        alert("Please enter an Order ID or Mobile Number.");
+        showToast("Please enter an Order ID or Mobile Number.", "error");
         return;
     }
 
@@ -364,7 +382,7 @@ function searchOrder() {
     let foundOrder = allOrders.find(o => o.orderId === input || o.phone === input);
 
     if(!foundOrder) {
-        alert("No order found with the provided details.");
+        showToast("No order found with the provided details.", "error");
         document.getElementById('tracking-result').style.display = 'none';
         return;
     }
@@ -422,49 +440,161 @@ function renderTracking(order) {
     });
 }
 
-// Profile Dashboard
-function renderProfile() {
-    const trackingContainer = document.getElementById('tracking-result');
-    trackingContainer.style.display = 'block';
-    trackingContainer.innerHTML = '';
+// ================= VIP PROFILE LOGIC =================
+function switchProfileTab(tabId) {
+    document.querySelectorAll('#profile-view .auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#profile-view .profile-tab-content').forEach(s => s.style.display = 'none');
 
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    let user = users[currentUser.email] || users[currentUser.phone];
+    if (tabId === 'profile-tab') {
+        document.querySelector('#profile-view .auth-tab:nth-child(1)').classList.add('active');
+        document.getElementById('profile-tab').style.display = 'block';
+    } else if (tabId === 'orders-tab') {
+        document.querySelector('#profile-view .auth-tab:nth-child(2)').classList.add('active');
+        document.getElementById('orders-tab').style.display = 'block';
+    } else {
+        document.querySelector('#profile-view .auth-tab:nth-child(3)').classList.add('active');
+        document.getElementById('help-tab').style.display = 'block';
+    }
+}
+
+function populateProfileData() {
+    if(!currentUser) return;
     
-    if(!user || !user.orders || user.orders.length === 0) {
-        trackingContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No previous orders found.</p>';
+    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
+    let user = users[currentUser.email] || users[currentUser.phone] || currentUser;
+
+    document.getElementById('prof-name').value = user.name || '';
+    document.getElementById('prof-email').value = user.email || '';
+    document.getElementById('prof-phone').value = user.phone || '';
+    document.getElementById('prof-address').value = user.address || '';
+
+    const ordersList = document.getElementById('profile-orders-list');
+    if(!user.orders || user.orders.length === 0) {
+        ordersList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No previous orders found.</p>';
+    } else {
+        let html = '';
+        user.orders.forEach(o => {
+            html += `
+                <div class="order-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: #fff; font-family: monospace; font-size: 14px;">${o.orderId}</span>
+                        <span style="color: var(--gold); font-size: 12px; font-weight: bold;">₹${o.total}</span>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px;">Placed on: ${o.date}</div>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <button class="btn-main" style="flex: 1; padding: 6px; font-size: 11px; background: transparent; border: 1px solid var(--gold); color: var(--gold);" onclick="viewOrderTracking('${o.orderId}')">Track Order</button>
+                        <button class="btn-main" style="flex: 1; padding: 6px; font-size: 11px; background: transparent; border: 1px solid var(--gold); color: var(--gold);" onclick="printHistoricalInvoice('${o.orderId}')">Invoice</button>
+                    </div>
+                </div>
+            `;
+        });
+        ordersList.innerHTML = html;
+    }
+}
+
+function viewOrderTracking(orderId) {
+    switchView('tracking-view');
+    document.getElementById('track-search-input').value = orderId;
+    searchOrder();
+}
+
+function saveProfile() {
+    if(!currentUser) return;
+
+    const name = document.getElementById('prof-name').value.trim();
+    const phone = document.getElementById('prof-phone').value.trim();
+    const address = document.getElementById('prof-address').value.trim();
+
+    if(!name || !phone) {
+        showToast("Name and phone number are required.", "error");
         return;
     }
 
-    let html = '<h4 style="color: var(--gold); margin-bottom: 20px;">Your Order History</h4>';
+    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
+    let user = users[currentUser.email] || users[currentUser.phone] || currentUser;
 
-    user.orders.forEach(o => {
-        html += `
-            <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 4px; margin-bottom: 15px; cursor: pointer;" onclick="renderTracking(JSON.parse('${JSON.stringify(o).replace(/"/g, '&quot;')}'))">
-                <div style="color: #fff; font-family: monospace; font-size: 14px; margin-bottom: 5px;">${o.orderId}</div>
-                <div style="color: var(--text-muted); font-size: 12px;">Placed on: ${o.date}</div>
-                <div style="color: var(--gold); font-size: 12px; margin-top: 5px;">₹${o.total}</div>
-            </div>
-        `;
-    });
+    user.name = name;
+    user.phone = phone;
+    user.address = address;
 
-    trackingContainer.innerHTML = html;
+    users[currentUser.email] = user;
+    if(currentUser.phone && currentUser.phone !== phone) {
+       delete users[currentUser.phone];
+    }
+    users[phone] = user;
+
+    localStorage.setItem('somaca_users', JSON.stringify(users));
+
+    currentUser = user;
+    localStorage.setItem('somaca_current_user', JSON.stringify(currentUser));
+
+    showToast("Profile details saved successfully.", "success");
 }
 
-// override checkAuth to setup My Account properly
-function updateAuthUI(isLoggedIn) {
-    const authBtn = document.getElementById('auth-btn');
-    if(authBtn) {
-        if(isLoggedIn) {
-            authBtn.innerText = "My Account";
-            authBtn.onclick = () => {
-                switchView('tracking-view');
-                document.getElementById('track-search-input').value = '';
-                renderProfile();
-            };
-        } else {
-            authBtn.innerText = "Sign In";
-            authBtn.onclick = () => switchView('auth-view');
-        }
+function logOut() {
+    currentUser = null;
+    localStorage.removeItem('somaca_current_user');
+    updateAuthUI(false);
+    switchView('home-view');
+    showToast("You have been signed out.", "success");
+}
+
+// ================= SOCIAL LOGIN LOGIC =================
+function openSocialModal() {
+    document.getElementById('social-modal').style.display = 'flex';
+}
+
+function closeSocialModal() {
+    document.getElementById('social-modal').style.display = 'none';
+}
+
+function submitSocialLogin() {
+    const name = document.getElementById('social-name').value.trim();
+    const email = document.getElementById('social-email').value.trim();
+    const phone = document.getElementById('social-phone').value.trim();
+
+    if(!name || !email || !phone) {
+        showToast("Please fill all details to continue.", "error");
+        return;
+    }
+
+    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
+    let user = users[email] || users[phone];
+
+    if(!user) {
+        user = { name, email, phone, password: "social_login", address: "", orders: [] };
+        users[email] = user;
+        users[phone] = user;
+        localStorage.setItem('somaca_users', JSON.stringify(users));
+    }
+
+    localStorage.setItem('somaca_current_user', JSON.stringify(user));
+    currentUser = user;
+
+    closeSocialModal();
+    updateAuthUI(true);
+    showToast(`Welcome via Social Login, ${name}!`, "success");
+    switchView('home-view');
+}
+
+// Add event listeners for social buttons
+document.querySelectorAll('.oauth-btn').forEach(btn => {
+    btn.onclick = (e) => {
+        e.preventDefault();
+        openSocialModal();
+    };
+});
+
+
+function printHistoricalInvoice(orderId) {
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+    let foundOrder = allOrders.find(o => o.orderId === orderId);
+    if(foundOrder) {
+        let tempCurrent = currentOrder;
+        currentOrder = foundOrder;
+        printInvoice();
+        currentOrder = tempCurrent;
+    } else {
+        showToast("Invoice not found.", "error");
     }
 }

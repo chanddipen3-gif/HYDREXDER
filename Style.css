@@ -564,3 +564,83 @@ footer {
     opacity: 1;
     transform: translateY(0);
 }
+
+/* Toast Notification Styles */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+}
+
+.toast {
+    background: #111;
+    color: var(--text-main);
+    border: 1px solid var(--gold);
+    padding: 15px 20px;
+    border-radius: 4px;
+    font-size: 13px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInRight 0.3s ease forwards, fadeOut 0.3s ease 2.7s forwards;
+    pointer-events: auto;
+}
+
+.toast.error {
+    border-color: #ff4d4d;
+}
+
+.toast.success {
+    border-color: #25D366;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.modal-content {
+    width: 100%;
+    margin: 0 20px;
+    padding: 30px;
+}
+
+/* Profile Tab Content */
+.profile-tab-content {
+    animation: fadeIn 0.3s ease-in-out forwards;
+}
+
+#profile-orders-list .order-card {
+    background: rgba(20, 20, 20, 0.6);
+    border: 1px solid var(--border-subtle);
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}

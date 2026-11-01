@@ -1,3 +1,23 @@
+
+// ================= FIREBASE INITIALIZATION =================
+const firebaseConfig = {
+  apiKey: "AIzaSyDlXERn2wmUCruVzJC9hCFl2nm9UFRKAfU",
+  authDomain: "houseofsomaca7.firebaseapp.com",
+  projectId: "houseofsomaca7",
+  storageBucket: "houseofsomaca7.firebasestorage.app",
+  messagingSenderId: "311541663916",
+  appId: "1:311541663916:web:df1a74884852bddf85f709",
+  measurementId: "G-6509VW49YJ"
+};
+
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Role config
+const FOUNDER_EMAIL = "houseofsomaca@gmail.com";
 const RAZORPAY_KEY_ID = "rzp_live_TupFjCnbtrJtuy";
 const MERCHANT_WHATSAPP = "918373960622";
 const MERCHANT_EMAIL = "houseofsomaca@gmail.com";
@@ -57,21 +77,44 @@ function toggleStaffAuth(type) {
     }
 }
 
-// LocalStorage Auth
-function checkAuth() {
-    const savedUser = localStorage.getItem('somaca_current_user');
-    if (savedUser) {
-        currentUser = JSON.parse(savedUser);
-        updateAuthUI(true);
-    }
 
-    const savedStaff = localStorage.getItem('somaca_current_staff');
-    if(savedStaff) {
-        currentStaff = JSON.parse(savedStaff);
-    }
+// Firebase Auth Listener
+function checkAuth() {
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = {
+                uid: user.uid,
+                email: user.email,
+                name: user.displayName || 'Client',
+                phone: user.phoneNumber || ''
+            };
+
+            // Check if staff
+            db.collection('staff_registry').where('email', '==', user.email).get().then(snap => {
+                if(!snap.empty) {
+                    currentStaff = snap.docs[0].data();
+                    currentStaff.empId = snap.docs[0].id;
+                }
+                updateAuthUI(true);
+            });
+
+            // Sync user to firestore
+            db.collection('users').doc(user.uid).set({
+                email: user.email,
+                name: user.displayName || 'Client',
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            }, {merge: true});
+
+        } else {
+            currentUser = null;
+            currentStaff = null;
+            updateAuthUI(false);
+        }
+    });
 }
 
 function updateAuthUI(isLoggedIn) {
+
     const authBtn = document.getElementById('auth-btn');
     if(authBtn) {
         if(isLoggedIn) {
@@ -86,109 +129,6 @@ function updateAuthUI(isLoggedIn) {
         }
     }
 }
-
-// ================= CLIENT OTP AUTHENTICATION =================
-function generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function requestClientOTP(action) {
-    let emailOrPhone, name, email, phone;
-
-    if (action === 'signin') {
-        emailOrPhone = document.getElementById('login-identifier').value.trim();
-        if(!emailOrPhone) {
-            showToast("Please enter Mobile Number or Email.", "error");
-            return;
-        }
-
-        let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-        let user = users[emailOrPhone];
-
-        if(!user) {
-            showToast("Account not found. Please Sign Up.", "error");
-            return;
-        }
-
-        pendingAuthData = { type: 'signin', user: user };
-
-    } else if (action === 'signup') {
-        name = document.getElementById('reg-name').value.trim();
-        email = document.getElementById('reg-email').value.trim();
-        phone = document.getElementById('reg-phone').value.trim();
-
-        if(!name || !email || !phone) {
-            showToast("Please fill all details.", "error");
-            return;
-        }
-
-        let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-        if(users[email] || users[phone]) {
-            showToast("Account already exists. Please Sign In.", "error");
-            return;
-        }
-
-        pendingAuthData = { type: 'signup', data: { name, email, phone, address: "", orders: [] } };
-    }
-
-    pendingOTP = generateOTP();
-    // Simulate sending OTP
-    showToast(`OTP Sent! Your verification code is ${pendingOTP}`, "success");
-
-    // Show Modal
-    document.getElementById('otp-input').value = "";
-    document.getElementById('otp-modal').style.display = 'flex';
-}
-
-function closeOTPModal() {
-    document.getElementById('otp-modal').style.display = 'none';
-    pendingOTP = null;
-    pendingAuthData = null;
-}
-
-function verifyClientOTP() {
-    const inputOTP = document.getElementById('otp-input').value.trim();
-    if(inputOTP !== pendingOTP) {
-        showToast("Invalid OTP. Please try again.", "error");
-        return;
-    }
-
-    // Success
-    closeOTPModal();
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-
-    if(pendingAuthData.type === 'signup') {
-        const newUser = pendingAuthData.data;
-        users[newUser.email] = newUser;
-        users[newUser.phone] = newUser;
-        localStorage.setItem('somaca_users', JSON.stringify(users));
-        localStorage.setItem('somaca_current_user', JSON.stringify(newUser));
-        currentUser = newUser;
-        showToast("Welcome to House of SOMACA!", "success");
-    } else {
-        const user = pendingAuthData.user;
-        localStorage.setItem('somaca_current_user', JSON.stringify(user));
-        currentUser = user;
-        showToast("Welcome back to SOMACA", "success");
-    }
-
-    updateAuthUI(true);
-    switchView('home-view');
-}
-
-
-// Scroll Reveals
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if(entry.isIntersecting) {
-            entry.target.classList.add('active');
-        }
-    });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-
 
 // ================= GUCCI UI LOGIC =================
 function toggleDrawer(drawerId) {
@@ -329,29 +269,21 @@ function handleSuccessfulPayment(paymentId, name, email, phone, addr, total, ite
         courierName: "SOMACA Express"
     };
 
-    // Save to global orders
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    allOrders.push(currentOrder);
-    localStorage.setItem('somaca_orders', JSON.stringify(allOrders));
 
-    // Save to user profile if logged in
-    if(currentUser) {
-        let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-        let user = users[currentUser.email] || users[currentUser.phone];
-        if(user) {
-            user.orders = user.orders || [];
-            user.orders.push(currentOrder);
-            localStorage.setItem('somaca_users', JSON.stringify(users));
-            // Update current user
-            currentUser = user;
-            localStorage.setItem('somaca_current_user', JSON.stringify(currentUser));
-        }
-    }
+    // Save to Firestore
+    db.collection('orders').doc(orderId).set(currentOrder)
+    .then(() => {
+        console.log("Order saved to Firestore");
+    })
+    .catch((error) => {
+        console.error("Error writing document: ", error);
+    });
 
     // Reset Cart (dummy update)
     document.getElementById('cart-count').innerText = "0";
 
     // Update Confirmation View
+
     document.getElementById('confirm-order-id').innerText = orderId;
     document.getElementById('confirm-est-delivery').innerText = "Est. Delivery: " + estDeliveryStr;
 
@@ -418,23 +350,22 @@ function printInvoice() {
 
 // ================= LIVE ORDER TRACKING LOGIC =================
 
+
 function searchOrder() {
     const input = document.getElementById('track-search-input').value.trim();
     if(!input) {
-        showToast("Please enter an Order ID or Mobile Number.", "error");
+        showToast("Please enter an Order ID.", "error");
         return;
     }
 
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let foundOrder = allOrders.find(o => o.orderId === input || o.phone === input);
-
-    if(!foundOrder) {
-        showToast("No order found with the provided details.", "error");
-        document.getElementById('tracking-result').style.display = 'none';
-        return;
-    }
-
-    renderTracking(foundOrder);
+    db.collection('orders').doc(input).get().then(doc => {
+        if(!doc.exists) {
+            showToast("No order found with the provided ID.", "error");
+            document.getElementById('tracking-result').style.display = 'none';
+        } else {
+            renderTracking(doc.data());
+        }
+    });
 }
 
 function renderTracking(order) {
@@ -510,28 +441,31 @@ function switchProfileTab(tabId) {
     }
 }
 
+
 function populateProfileData() {
     if(!currentUser) return;
 
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    let user = users[currentUser.email] || users[currentUser.phone] || currentUser;
+    document.getElementById('prof-name').value = currentUser.name || '';
+    document.getElementById('prof-email').value = currentUser.email || '';
+    document.getElementById('prof-phone').value = currentUser.phone || '';
 
-    document.getElementById('prof-name').value = user.name || '';
-    document.getElementById('prof-email').value = user.email || '';
-    document.getElementById('prof-phone').value = user.phone || '';
-    document.getElementById('prof-address').value = user.address || '';
+    db.collection('users').doc(currentUser.uid).get().then(doc => {
+        if(doc.exists) {
+            document.getElementById('prof-address').value = doc.data().address || '';
+        }
+    });
 
     const ordersList = document.getElementById('profile-orders-list');
 
-    // Refresh user's orders from global store to get updated statuses from staff
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let userOrders = allOrders.filter(o => o.email === user.email || o.phone === user.phone);
+    db.collection('orders').where('email', '==', currentUser.email).get().then(snap => {
+        if(snap.empty) {
+            ordersList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No previous orders found.</p>';
+            return;
+        }
 
-    if(userOrders.length === 0) {
-        ordersList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No previous orders found.</p>';
-    } else {
         let html = '';
-        userOrders.forEach(o => {
+        snap.forEach(doc => {
+            const o = doc.data();
             html += `
                 <div class="order-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -548,13 +482,7 @@ function populateProfileData() {
             `;
         });
         ordersList.innerHTML = html;
-
-        // sync back to user object
-        user.orders = userOrders;
-        users[user.email] = user;
-        users[user.phone] = user;
-        localStorage.setItem('somaca_users', JSON.stringify(users));
-    }
+    });
 }
 
 function viewOrderTracking(orderId) {
@@ -564,18 +492,20 @@ function viewOrderTracking(orderId) {
 }
 
 
+
 function printHistoricalInvoice(orderId) {
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let foundOrder = allOrders.find(o => o.orderId === orderId);
-    if(foundOrder) {
-        let tempCurrent = currentOrder;
-        currentOrder = foundOrder;
-        printInvoice();
-        currentOrder = tempCurrent;
-    } else {
-        showToast("Invoice not found.", "error");
-    }
+    db.collection('orders').doc(orderId).get().then(doc => {
+        if(doc.exists) {
+            let tempCurrent = currentOrder;
+            currentOrder = doc.data();
+            printInvoice();
+            currentOrder = tempCurrent;
+        } else {
+            showToast("Invoice not found.", "error");
+        }
+    });
 }
+
 
 function saveProfile() {
     if(!currentUser) return;
@@ -589,80 +519,93 @@ function saveProfile() {
         return;
     }
 
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    let user = users[currentUser.email] || users[currentUser.phone] || currentUser;
-
-    user.name = name;
-    user.phone = phone;
-    user.address = address;
-
-    users[currentUser.email] = user;
-    if(currentUser.phone && currentUser.phone !== phone) {
-       delete users[currentUser.phone];
-    }
-    users[phone] = user;
-
-    localStorage.setItem('somaca_users', JSON.stringify(users));
-
-    currentUser = user;
-    localStorage.setItem('somaca_current_user', JSON.stringify(currentUser));
-
-    showToast("Profile details saved successfully.", "success");
+    db.collection('users').doc(currentUser.uid).update({
+        name: name,
+        phone: phone,
+        address: address
+    }).then(() => {
+        showToast("Profile details saved successfully.", "success");
+    }).catch(e => showToast(e.message, "error"));
 }
+
 
 function logOut() {
-    currentUser = null;
-    localStorage.removeItem('somaca_current_user');
-    updateAuthUI(false);
-    switchView('home-view');
-    showToast("You have been signed out.", "success");
+    auth.signOut().then(() => {
+        switchView('home-view');
+        showToast("You have been signed out.", "success");
+    });
 }
 
-// ================= SOCIAL LOGIN LOGIC =================
-function openSocialModal() {
-    document.getElementById('social-modal').style.display = 'flex';
+// ================= FIREBASE AUTH LOGIC =================
+function signInWithGoogle() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).then((result) => {
+        showToast(`Welcome back, ${result.user.displayName}!`, "success");
+        switchView('home-view');
+    }).catch((error) => {
+        showToast(error.message, "error");
+    });
 }
 
-function closeSocialModal() {
-    document.getElementById('social-modal').style.display = 'none';
-}
-
-function submitSocialLogin() {
-    const name = document.getElementById('social-name').value.trim();
-    const email = document.getElementById('social-email').value.trim();
-    const phone = document.getElementById('social-phone').value.trim();
-
-    if(!name || !email || !phone) {
-        showToast("Please fill all details to continue.", "error");
+function sendMagicLink() {
+    const email = document.getElementById('magic-email-input').value.trim();
+    if(!email) {
+        showToast("Please enter a valid email address.", "error");
         return;
     }
 
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    let user = users[email] || users[phone];
+    const actionCodeSettings = {
+        url: window.location.href,
+        handleCodeInApp: true
+    };
 
-    if(!user) {
-        user = { name, email, phone, password: "social_login", address: "", orders: [] };
-        users[email] = user;
-        users[phone] = user;
-        localStorage.setItem('somaca_users', JSON.stringify(users));
-    }
-
-    localStorage.setItem('somaca_current_user', JSON.stringify(user));
-    currentUser = user;
-
-    closeSocialModal();
-    updateAuthUI(true);
-    showToast(`Welcome via Social Login, ${name}!`, "success");
-    switchView('home-view');
+    auth.sendSignInLinkToEmail(email, actionCodeSettings)
+        .then(() => {
+            window.localStorage.setItem('emailForSignIn', email);
+            showToast("Magic link sent! Check your inbox.", "success");
+        })
+        .catch((error) => {
+            showToast(error.message, "error");
+        });
 }
 
-// Add event listeners for social buttons
-document.querySelectorAll('.oauth-btn').forEach(btn => {
-    btn.onclick = (e) => {
-        e.preventDefault();
-        openSocialModal();
-    };
-});
+function completeMagicLinkSignIn() {
+    const email = document.getElementById('confirm-email-input').value.trim();
+    if(!email) {
+        showToast("Email is required.", "error");
+        return;
+    }
+
+    auth.signInWithEmailLink(email, window.location.href)
+        .then((result) => {
+            window.localStorage.removeItem('emailForSignIn');
+            document.getElementById('email-confirm-modal').style.display = 'none';
+            showToast("Successfully signed in!", "success");
+            switchView('home-view');
+        })
+        .catch((error) => {
+            showToast(error.message, "error");
+        });
+}
+
+// Check for magic link on load
+if (auth.isSignInWithEmailLink(window.location.href)) {
+    let email = window.localStorage.getItem('emailForSignIn');
+    if (!email) {
+        document.getElementById('email-confirm-modal').style.display = 'flex';
+    } else {
+        auth.signInWithEmailLink(email, window.location.href)
+            .then((result) => {
+                window.localStorage.removeItem('emailForSignIn');
+                showToast("Successfully signed in!", "success");
+            })
+            .catch((error) => {
+                showToast(error.message, "error");
+            });
+    }
+}
+
+
 
 // ================= STAFF / EMPLOYEE PORTAL =================
 
@@ -676,26 +619,23 @@ function staffRegister() {
         return;
     }
 
-    const validEmployee = EMPLOYEE_REGISTRY[empId];
-
-    if(!validEmployee || validEmployee.email !== email) {
-        showToast("Verification Failed: Employee ID and Email do not match the company registry.", "error");
-        return;
-    }
-
-    let staffMembers = JSON.parse(localStorage.getItem('somaca_staff') || '{}');
-
-    if(staffMembers[empId]) {
-        showToast("Staff member already registered. Please sign in.", "error");
-        return;
-    }
-
-    const newStaff = { empId, name: validEmployee.name, email, password: pass };
-    staffMembers[empId] = newStaff;
-    localStorage.setItem('somaca_staff', JSON.stringify(staffMembers));
-
-    showToast("Staff registered successfully. Please login.", "success");
-    toggleStaffAuth('signin');
+    // Verify against registry in Firestore
+    db.collection('staff_registry').doc(empId).get().then((doc) => {
+        if (doc.exists && doc.data().email === email) {
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    showToast("Staff registered successfully. Please login.", "success");
+                    toggleStaffAuth('signin');
+                })
+                .catch((error) => {
+                    showToast(error.message, "error");
+                });
+        } else {
+            showToast("Verification Failed: Employee ID and Email do not match registry.", "error");
+        }
+    }).catch((error) => {
+        showToast("Error checking registry: " + error.message, "error");
+    });
 }
 
 function staffSignIn() {
@@ -707,25 +647,47 @@ function staffSignIn() {
         return;
     }
 
-    let staffMembers = JSON.parse(localStorage.getItem('somaca_staff') || '{}');
-    let staff = staffMembers[empId];
-
-    if(staff && staff.password === pass) {
-        localStorage.setItem('somaca_current_staff', JSON.stringify(staff));
-        currentStaff = staff;
-        showToast(`Welcome to the Atelier, ${staff.name}`, "success");
-        openStaffDashboard();
-    } else {
-        showToast("Invalid staff credentials or not registered.", "error");
-    }
+    db.collection('staff_registry').doc(empId).get().then((doc) => {
+        if(doc.exists) {
+            const email = doc.data().email;
+            auth.signInWithEmailAndPassword(email, pass)
+                .then((userCredential) => {
+                    currentStaff = doc.data();
+                    currentStaff.empId = empId;
+                    showToast(`Welcome to the Atelier, ${currentStaff.name}`, "success");
+                    openStaffDashboard();
+                })
+                .catch((error) => {
+                    showToast("Invalid password.", "error");
+                });
+        } else {
+            showToast("Invalid staff credentials or not registered.", "error");
+        }
+    });
 }
 
 function staffLogOut() {
-    currentStaff = null;
-    localStorage.removeItem('somaca_current_staff');
-    switchView('home-view');
-    showToast("Staff logged out successfully.", "success");
+    auth.signOut().then(() => {
+        switchView('home-view');
+        showToast("Staff logged out successfully.", "success");
+    });
 }
+
+function switchStaffTab(tabId) {
+    document.querySelectorAll('#staff-dashboard-view .auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#staff-dashboard-view .profile-tab-content').forEach(s => s.style.display = 'none');
+
+    if (tabId === 'staff-orders-tab') {
+        document.querySelector('#staff-dashboard-view .auth-tab:nth-child(1)').classList.add('active');
+        document.getElementById('staff-orders-tab').style.display = 'block';
+    } else {
+        document.querySelector('#staff-dashboard-view .auth-tab:nth-child(2)').classList.add('active');
+        document.getElementById('staff-hr-tab').style.display = 'block';
+        loadHRMetrics();
+    }
+}
+
+let staffUnsubscribe = null;
 
 function openStaffDashboard() {
     if(!currentStaff) {
@@ -734,32 +696,36 @@ function openStaffDashboard() {
     }
     document.getElementById('staff-welcome-msg').innerText = `Welcome, ${currentStaff.name} (${currentStaff.empId})`;
     switchView('staff-dashboard-view');
-    renderStaffOrders();
-}
 
-function renderStaffOrders(filterText = '') {
-    const tbody = document.getElementById('staff-orders-body');
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-
-    // Reverse to show newest first
-    allOrders.reverse();
-
-    if(filterText) {
-        filterText = filterText.toLowerCase();
-        allOrders = allOrders.filter(o =>
-            o.orderId.toLowerCase().includes(filterText) ||
-            (o.name && o.name.toLowerCase().includes(filterText)) ||
-            (o.phone && o.phone.includes(filterText))
-        );
+    // RBAC
+    if(currentStaff.email === FOUNDER_EMAIL) {
+        document.getElementById('hr-metrics-tab-btn').style.display = 'inline-block';
+    } else {
+        document.getElementById('hr-metrics-tab-btn').style.display = 'none';
+        switchStaffTab('staff-orders-tab');
     }
 
-    if(allOrders.length === 0) {
+    // Realtime Orders
+    if(staffUnsubscribe) staffUnsubscribe();
+    staffUnsubscribe = db.collection('orders').orderBy('timestamp', 'desc').onSnapshot((snapshot) => {
+        let allOrders = [];
+        snapshot.forEach(doc => {
+            allOrders.push(doc.data());
+        });
+        window.staffAllOrders = allOrders; // cache for filter
+        renderStaffOrders(allOrders);
+    });
+}
+
+function renderStaffOrders(orders) {
+    const tbody = document.getElementById('staff-orders-body');
+    if(!orders || orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">No orders found.</td></tr>';
         return;
     }
 
     let html = '';
-    allOrders.forEach(o => {
+    orders.forEach(o => {
         const currentStatus = o.status || 'Confirmed';
         html += `
             <tr class="staff-order-row">
@@ -792,27 +758,56 @@ function renderStaffOrders(filterText = '') {
 }
 
 function filterStaffOrders() {
-    const input = document.getElementById('staff-search-input').value;
-    renderStaffOrders(input);
+    const input = document.getElementById('staff-search-input').value.toLowerCase();
+    const orders = window.staffAllOrders || [];
+
+    if(!input) {
+        renderStaffOrders(orders);
+        return;
+    }
+
+    const filtered = orders.filter(o =>
+        o.orderId.toLowerCase().includes(input) ||
+        (o.name && o.name.toLowerCase().includes(input)) ||
+        (o.phone && o.phone.includes(input))
+    );
+    renderStaffOrders(filtered);
 }
 
 function updateOrderStatus(orderId, newStatus) {
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let orderIndex = allOrders.findIndex(o => o.orderId === orderId);
-    if(orderIndex > -1) {
-        allOrders[orderIndex].status = newStatus;
-        localStorage.setItem('somaca_orders', JSON.stringify(allOrders));
-        showToast(`Status updated to ${newStatus} for ${orderId}`, "success");
-    }
+    db.collection('orders').doc(orderId).update({ status: newStatus })
+        .then(() => showToast(`Status updated to ${newStatus}`, "success"))
+        .catch(e => showToast(e.message, "error"));
 }
 
 function updateOrderAWB(orderId, newAWB) {
     if(!newAWB) return;
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let orderIndex = allOrders.findIndex(o => o.orderId === orderId);
-    if(orderIndex > -1 && allOrders[orderIndex].awbNumber !== newAWB) {
-        allOrders[orderIndex].awbNumber = newAWB;
-        localStorage.setItem('somaca_orders', JSON.stringify(allOrders));
-        showToast(`AWB updated for ${orderId}`, "success");
-    }
+    db.collection('orders').doc(orderId).update({ awbNumber: newAWB })
+        .then(() => showToast(`AWB updated`, "success"))
+        .catch(e => showToast(e.message, "error"));
+}
+
+function loadHRMetrics() {
+    const orders = window.staffAllOrders || [];
+    let totalRevenue = 0;
+    orders.forEach(o => totalRevenue += parseFloat(o.total || 0));
+
+    document.getElementById('metric-total-orders').innerText = orders.length;
+    document.getElementById('metric-total-revenue').innerText = '₹' + totalRevenue;
+
+    db.collection('staff_registry').get().then(snap => {
+        let html = '';
+        snap.forEach(doc => {
+            const data = doc.data();
+            html += `
+                <div class="registry-card">
+                    <div>
+                        <div style="color: #fff; font-weight: bold;">${data.name}</div>
+                        <div style="color: var(--text-muted);">${doc.id} | ${data.email}</div>
+                    </div>
+                </div>
+            `;
+        });
+        document.getElementById('staff-registry-list').innerHTML = html;
+    });
 }

@@ -130,6 +130,15 @@ function updateAuthUI(isLoggedIn) {
     }
 }
 
+
+// ================= UTILS =================
+function sanitize(str) {
+    if (!str) return '';
+    const temp = document.createElement('div');
+    temp.textContent = str;
+    return temp.innerHTML;
+}
+
 // ================= GUCCI UI LOGIC =================
 function toggleDrawer(drawerId) {
     const drawer = document.getElementById(drawerId);
@@ -328,12 +337,12 @@ function printInvoice() {
                 <b>Payment ID:</b> ${currentOrder.razorpay_payment_id}<br>
                 <br>
                 <b>Billed To:</b><br>
-                ${currentOrder.email}<br>
-                ${currentOrder.phone}<br>
-                ${currentOrder.address}<br>
+                ${sanitize(currentOrder.email)}<br>
+                ${sanitize(currentOrder.phone)}<br>
+                ${sanitize(currentOrder.address)}<br>
                 <br>
                 <b>Items Ordered:</b><br>
-                ${currentOrder.items}<br>
+                ${sanitize(currentOrder.items)}<br>
             </div>
             <div class="total">Total Paid: ₹${currentOrder.total}</div>
             <div class="footer" style="margin-top: 50px;">
@@ -734,9 +743,9 @@ function renderStaffOrders(orders) {
                     <div style="color: var(--text-muted); font-size: 11px;">${o.date}</div>
                 </td>
                 <td>
-                    <div style="color: #fff;">${o.name || 'N/A'}</div>
-                    <div style="color: var(--text-muted); font-size: 11px;">${o.phone} | ${o.email}</div>
-                    <div style="color: var(--text-muted); font-size: 10px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.address}">${o.address}</div>
+                    <div style="color: #fff;">${sanitize(o.name) || 'N/A'}</div>
+                    <div style="color: var(--text-muted); font-size: 11px;">${sanitize(o.phone)} | ${sanitize(o.email)}</div>
+                    <div style="color: var(--text-muted); font-size: 10px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${sanitize(o.address)}">${sanitize(o.address)}</div>
                 </td>
                 <td>
                     <select class="glass-input" style="padding: 4px; font-size: 11px; margin-bottom: 5px; width: 100%;" onchange="updateOrderStatus('${o.orderId}', this.value)">
@@ -795,7 +804,7 @@ function loadHRMetrics() {
     document.getElementById('metric-total-orders').innerText = orders.length;
     document.getElementById('metric-total-revenue').innerText = '₹' + totalRevenue;
 
-    db.collection('staff_registry').get().then(snap => {
+    db.collection('staff_registry').onSnapshot(snap => {
         let html = '';
         snap.forEach(doc => {
             const data = doc.data();
@@ -805,9 +814,45 @@ function loadHRMetrics() {
                         <div style="color: #fff; font-weight: bold;">${data.name}</div>
                         <div style="color: var(--text-muted);">${doc.id} | ${data.email}</div>
                     </div>
+                    <button class="delete-staff-btn" title="Remove Staff" onclick="removeStaffMember('${doc.id}')">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
                 </div>
             `;
         });
         document.getElementById('staff-registry-list').innerHTML = html;
+    });
+}
+
+function addStaffMember() {
+    const empId = document.getElementById('new-staff-id').value.trim();
+    const name = document.getElementById('new-staff-name').value.trim();
+    const email = document.getElementById('new-staff-email').value.trim();
+
+    if(!empId || !name || !email) {
+        showToast("Please fill all staff details.", "error");
+        return;
+    }
+
+    db.collection('staff_registry').doc(empId).set({
+        name: name,
+        email: email
+    }).then(() => {
+        showToast("Staff member added to registry.", "success");
+        document.getElementById('new-staff-id').value = '';
+        document.getElementById('new-staff-name').value = '';
+        document.getElementById('new-staff-email').value = '';
+    }).catch(e => {
+        showToast("Error adding staff: " + e.message, "error");
+    });
+}
+
+function removeStaffMember(empId) {
+    db.collection('staff_registry').doc(empId).delete().then(() => {
+        showToast("Staff member removed from registry.", "success");
+    }).catch(e => {
+        showToast("Error removing staff: " + e.message, "error");
     });
 }

@@ -466,8 +466,26 @@
                         <div style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">Total Revenue</div>
                     </div>
                 </div>
-                <h3 class="luxury-font" style="color: var(--gold); margin-bottom: 15px;">Staff Registry</h3>
-                <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Authorized personnel configured in database.</p>
+
+                <h3 class="luxury-font" style="color: var(--gold); margin-bottom: 15px;">Manage Staff Registry</h3>
+                <p style="color: var(--text-muted); font-size: 12px; margin-bottom: 15px;">Add authorized personnel to the database.</p>
+
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid var(--border-subtle); padding: 15px; border-radius: 6px; margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end;">
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Emp ID</label>
+                        <input type="text" id="new-staff-id" class="glass-input" placeholder="SOM-10X" style="padding: 8px;">
+                    </div>
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Name</label>
+                        <input type="text" id="new-staff-name" class="glass-input" placeholder="Staff Name" style="padding: 8px;">
+                    </div>
+                    <div>
+                        <label style="color: var(--text-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">Email</label>
+                        <input type="email" id="new-staff-email" class="glass-input" placeholder="name@somaca.com" style="padding: 8px;">
+                    </div>
+                    <button class="btn-main glow-btn" style="padding: 9px 15px; font-size: 11px;" onclick="addStaffMember()">Add</button>
+                </div>
+
                 <div id="staff-registry-list" style="font-size: 13px;">
                     <!-- Staff list populated from Firestore -->
                 </div>

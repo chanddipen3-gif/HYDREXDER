@@ -644,3 +644,32 @@ footer {
     border-radius: 6px;
     margin-bottom: 15px;
 }
+
+/* OTP Specific Styles */
+.otp-input {
+    letter-spacing: 8px !important;
+    text-align: center;
+    font-size: 24px !important;
+    font-family: monospace;
+}
+
+.staff-orders-container {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 6px;
+    padding: 15px;
+    border: 1px solid var(--border-subtle);
+}
+
+.staff-order-row {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: background 0.3s ease;
+}
+
+.staff-order-row:hover {
+    background: rgba(212, 175, 55, 0.05);
+}
+
+.staff-order-row td {
+    padding: 15px 8px;
+    vertical-align: middle;
+}

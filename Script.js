@@ -3,6 +3,16 @@ const MERCHANT_WHATSAPP = "918373960622";
 const MERCHANT_EMAIL = "houseofsomaca@gmail.com";
 
 let currentUser = null;
+let currentStaff = null;
+let pendingOTP = null;
+let pendingAuthData = null;
+
+// Registry for Staff/Employees
+const EMPLOYEE_REGISTRY = {
+    "SOM-101": { name: "Aditi Sharma", email: "aditi@somaca.com" },
+    "SOM-102": { name: "Rohan Verma", email: "rohan@somaca.com" },
+    "SOM-103": { name: "Founder / Admin", email: "houseofsomaca@gmail.com" }
+};
 
 // View Navigation
 function switchView(viewId) {
@@ -19,17 +29,31 @@ function switchView(viewId) {
     }
 }
 
-// Authentication Tabs
+// Authentication Tabs (Client)
 function toggleAuth(type) {
-    document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.auth-section').forEach(s => s.style.display = 'none');
+    document.querySelectorAll('#auth-view .auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#auth-view .auth-section').forEach(s => s.style.display = 'none');
 
     if (type === 'signin') {
-        document.querySelector('.auth-tab:nth-child(1)').classList.add('active');
+        document.querySelector('#auth-view .auth-tab:nth-child(1)').classList.add('active');
         document.getElementById('signin-section').style.display = 'block';
     } else {
-        document.querySelector('.auth-tab:nth-child(2)').classList.add('active');
+        document.querySelector('#auth-view .auth-tab:nth-child(2)').classList.add('active');
         document.getElementById('signup-section').style.display = 'block';
+    }
+}
+
+// Authentication Tabs (Staff)
+function toggleStaffAuth(type) {
+    document.querySelectorAll('#staff-auth-view .auth-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('#staff-auth-view .auth-section').forEach(s => s.style.display = 'none');
+
+    if (type === 'signin') {
+        document.querySelector('#staff-auth-view .auth-tab:nth-child(1)').classList.add('active');
+        document.getElementById('staff-signin-section').style.display = 'block';
+    } else {
+        document.querySelector('#staff-auth-view .auth-tab:nth-child(2)').classList.add('active');
+        document.getElementById('staff-register-section').style.display = 'block';
     }
 }
 
@@ -39,6 +63,11 @@ function checkAuth() {
     if (savedUser) {
         currentUser = JSON.parse(savedUser);
         updateAuthUI(true);
+    }
+
+    const savedStaff = localStorage.getItem('somaca_current_staff');
+    if(savedStaff) {
+        currentStaff = JSON.parse(savedStaff);
     }
 }
 
@@ -58,58 +87,95 @@ function updateAuthUI(isLoggedIn) {
     }
 }
 
-function signUp() {
-    const name = document.getElementById('reg-name').value.trim();
-    const email = document.getElementById('reg-email').value.trim();
-    const phone = document.getElementById('reg-phone').value.trim();
-    const pass = document.getElementById('reg-pass').value.trim();
+// ================= CLIENT OTP AUTHENTICATION =================
+function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
-    if(!name || !email || !phone || !pass) {
-        showToast("Please fill all fields for registration.", "error");
+function requestClientOTP(action) {
+    let emailOrPhone, name, email, phone;
+
+    if (action === 'signin') {
+        emailOrPhone = document.getElementById('login-identifier').value.trim();
+        if(!emailOrPhone) {
+            showToast("Please enter Mobile Number or Email.", "error");
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
+        let user = users[emailOrPhone];
+
+        if(!user) {
+            showToast("Account not found. Please Sign Up.", "error");
+            return;
+        }
+
+        pendingAuthData = { type: 'signin', user: user };
+
+    } else if (action === 'signup') {
+        name = document.getElementById('reg-name').value.trim();
+        email = document.getElementById('reg-email').value.trim();
+        phone = document.getElementById('reg-phone').value.trim();
+
+        if(!name || !email || !phone) {
+            showToast("Please fill all details.", "error");
+            return;
+        }
+
+        let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
+        if(users[email] || users[phone]) {
+            showToast("Account already exists. Please Sign In.", "error");
+            return;
+        }
+
+        pendingAuthData = { type: 'signup', data: { name, email, phone, address: "", orders: [] } };
+    }
+
+    pendingOTP = generateOTP();
+    // Simulate sending OTP
+    showToast(`OTP Sent! Your verification code is ${pendingOTP}`, "success");
+
+    // Show Modal
+    document.getElementById('otp-input').value = "";
+    document.getElementById('otp-modal').style.display = 'flex';
+}
+
+function closeOTPModal() {
+    document.getElementById('otp-modal').style.display = 'none';
+    pendingOTP = null;
+    pendingAuthData = null;
+}
+
+function verifyClientOTP() {
+    const inputOTP = document.getElementById('otp-input').value.trim();
+    if(inputOTP !== pendingOTP) {
+        showToast("Invalid OTP. Please try again.", "error");
         return;
     }
 
+    // Success
+    closeOTPModal();
     let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    if(users[email] || users[phone]) {
-        showToast("Account already exists with this email or phone.", "error");
-        return;
+
+    if(pendingAuthData.type === 'signup') {
+        const newUser = pendingAuthData.data;
+        users[newUser.email] = newUser;
+        users[newUser.phone] = newUser;
+        localStorage.setItem('somaca_users', JSON.stringify(users));
+        localStorage.setItem('somaca_current_user', JSON.stringify(newUser));
+        currentUser = newUser;
+        showToast("Welcome to House of SOMACA!", "success");
+    } else {
+        const user = pendingAuthData.user;
+        localStorage.setItem('somaca_current_user', JSON.stringify(user));
+        currentUser = user;
+        showToast("Welcome back to SOMACA", "success");
     }
-
-    const newUser = { name, email, phone, password: pass, address: "", orders: [] };
-    users[email] = newUser;
-    users[phone] = newUser; // map both for easy login
-
-    localStorage.setItem('somaca_users', JSON.stringify(users));
-    localStorage.setItem('somaca_current_user', JSON.stringify(newUser));
-    currentUser = newUser;
 
     updateAuthUI(true);
-    showToast("Welcome to House of SOMACA!", "success");
     switchView('home-view');
 }
 
-function signIn() {
-    const loginId = document.querySelector('#signin-section input[type="text"]').value.trim();
-    const pass = document.querySelector('#signin-section input[type="password"]').value.trim();
-
-    if(!loginId || !pass) {
-        showToast("Please enter login credentials.", "error");
-        return;
-    }
-
-    let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
-    let user = users[loginId];
-
-    if(user && user.password === pass) {
-        localStorage.setItem('somaca_current_user', JSON.stringify(user));
-        currentUser = user;
-        updateAuthUI(true);
-        showToast("Welcome back to SOMACA", "success");
-        switchView('home-view');
-    } else {
-        showToast("Invalid credentials.", "error");
-    }
-}
 
 // Particle Background Animation
 const canvas = document.getElementById('particle-canvas');
@@ -274,12 +340,14 @@ function handleSuccessfulPayment(paymentId, name, email, phone, addr, total, ite
         estimatedDelivery: estDeliveryStr,
         items,
         total,
+        name,
         address: addr,
         phone,
         email,
         razorpay_payment_id: paymentId,
         awbNumber: "Pending Dispatch",
-        courierName: "SOMACA Express / Partner Courier"
+        status: "Confirmed",
+        courierName: "SOMACA Express"
     };
 
     // Save to global orders
@@ -406,28 +474,34 @@ function renderTracking(order) {
     const container = document.getElementById('tracking-timeline-container');
     container.innerHTML = '';
 
+    const statusMap = {
+        "Confirmed": 0,
+        "Processing": 1,
+        "Dispatched": 2,
+        "In Transit": 3,
+        "Delivered": 4
+    };
+
+    const currentStatusIndex = statusMap[order.status] || 0;
+
     const stages = [
-        { title: "Order Confirmed & Payment Verified", delayHr: 0, timeStr: `${order.date} | ID: ${order.razorpay_payment_id}` },
-        { title: "Luxury Formulation & Quality Packaging", delayHr: 2 },
-        { title: "Dispatched from SOMACA Atelier", delayHr: 24 },
-        { title: "In Transit to Destination City", delayHr: 48 },
-        { title: "Out for Delivery / Delivered", delayHr: 120, est: order.estimatedDelivery } // roughly 5 days
+        { title: "Order Confirmed & Payment Verified", timeStr: `${order.date} | ID: ${order.razorpay_payment_id}` },
+        { title: "Luxury Formulation & Quality Packaging" },
+        { title: "Dispatched from SOMACA Atelier" },
+        { title: "In Transit to Destination City" },
+        { title: "Out for Delivery / Delivered", est: order.estimatedDelivery }
     ];
 
-    const now = new Date().getTime();
-    const orderTime = order.timestamp;
-
     stages.forEach((stage, index) => {
-        const stageTime = orderTime + (stage.delayHr * 60 * 60 * 1000);
-        const isActive = now >= stageTime;
+        const isActive = index <= currentStatusIndex;
 
         let timeHtml = "";
         if (stage.timeStr) {
             timeHtml = `<div class="timeline-time">${stage.timeStr}</div>`;
-        } else if (isActive && index < 4) {
-            timeHtml = `<div class="timeline-time">${new Date(stageTime).toLocaleString()}</div>`;
         } else if (index === 4) {
             timeHtml = `<div class="timeline-time">Expected: ${stage.est}</div>`;
+        } else if (isActive) {
+            timeHtml = `<div class="timeline-time">Completed</div>`;
         }
 
         const div = document.createElement('div');
@@ -459,7 +533,7 @@ function switchProfileTab(tabId) {
 
 function populateProfileData() {
     if(!currentUser) return;
-    
+
     let users = JSON.parse(localStorage.getItem('somaca_users') || '{}');
     let user = users[currentUser.email] || users[currentUser.phone] || currentUser;
 
@@ -469,18 +543,24 @@ function populateProfileData() {
     document.getElementById('prof-address').value = user.address || '';
 
     const ordersList = document.getElementById('profile-orders-list');
-    if(!user.orders || user.orders.length === 0) {
+
+    // Refresh user's orders from global store to get updated statuses from staff
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+    let userOrders = allOrders.filter(o => o.email === user.email || o.phone === user.phone);
+
+    if(userOrders.length === 0) {
         ordersList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No previous orders found.</p>';
     } else {
         let html = '';
-        user.orders.forEach(o => {
+        userOrders.forEach(o => {
             html += `
                 <div class="order-card">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <span style="color: #fff; font-family: monospace; font-size: 14px;">${o.orderId}</span>
                         <span style="color: var(--gold); font-size: 12px; font-weight: bold;">₹${o.total}</span>
                     </div>
-                    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 10px;">Placed on: ${o.date}</div>
+                    <div style="color: var(--text-muted); font-size: 12px; margin-bottom: 5px;">Placed on: ${o.date}</div>
+                    <div style="color: var(--pink-accent); font-size: 11px; font-weight: 600;">Status: ${o.status || 'Confirmed'}</div>
                     <div style="display: flex; gap: 10px; margin-top: 10px;">
                         <button class="btn-main" style="flex: 1; padding: 6px; font-size: 11px; background: transparent; border: 1px solid var(--gold); color: var(--gold);" onclick="viewOrderTracking('${o.orderId}')">Track Order</button>
                         <button class="btn-main" style="flex: 1; padding: 6px; font-size: 11px; background: transparent; border: 1px solid var(--gold); color: var(--gold);" onclick="printHistoricalInvoice('${o.orderId}')">Invoice</button>
@@ -489,6 +569,12 @@ function populateProfileData() {
             `;
         });
         ordersList.innerHTML = html;
+
+        // sync back to user object
+        user.orders = userOrders;
+        users[user.email] = user;
+        users[user.phone] = user;
+        localStorage.setItem('somaca_users', JSON.stringify(users));
     }
 }
 
@@ -496,6 +582,20 @@ function viewOrderTracking(orderId) {
     switchView('tracking-view');
     document.getElementById('track-search-input').value = orderId;
     searchOrder();
+}
+
+
+function printHistoricalInvoice(orderId) {
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+    let foundOrder = allOrders.find(o => o.orderId === orderId);
+    if(foundOrder) {
+        let tempCurrent = currentOrder;
+        currentOrder = foundOrder;
+        printInvoice();
+        currentOrder = tempCurrent;
+    } else {
+        showToast("Invoice not found.", "error");
+    }
 }
 
 function saveProfile() {
@@ -585,16 +685,155 @@ document.querySelectorAll('.oauth-btn').forEach(btn => {
     };
 });
 
+// ================= STAFF / EMPLOYEE PORTAL =================
 
-function printHistoricalInvoice(orderId) {
-    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
-    let foundOrder = allOrders.find(o => o.orderId === orderId);
-    if(foundOrder) {
-        let tempCurrent = currentOrder;
-        currentOrder = foundOrder;
-        printInvoice();
-        currentOrder = tempCurrent;
+function staffRegister() {
+    const empId = document.getElementById('staff-reg-id').value.trim();
+    const email = document.getElementById('staff-reg-email').value.trim();
+    const pass = document.getElementById('staff-reg-pass').value.trim();
+
+    if(!empId || !email || !pass) {
+        showToast("Please fill all staff details.", "error");
+        return;
+    }
+
+    const validEmployee = EMPLOYEE_REGISTRY[empId];
+
+    if(!validEmployee || validEmployee.email !== email) {
+        showToast("Verification Failed: Employee ID and Email do not match the company registry.", "error");
+        return;
+    }
+
+    let staffMembers = JSON.parse(localStorage.getItem('somaca_staff') || '{}');
+
+    if(staffMembers[empId]) {
+        showToast("Staff member already registered. Please sign in.", "error");
+        return;
+    }
+
+    const newStaff = { empId, name: validEmployee.name, email, password: pass };
+    staffMembers[empId] = newStaff;
+    localStorage.setItem('somaca_staff', JSON.stringify(staffMembers));
+
+    showToast("Staff registered successfully. Please login.", "success");
+    toggleStaffAuth('signin');
+}
+
+function staffSignIn() {
+    const empId = document.getElementById('staff-login-id').value.trim();
+    const pass = document.getElementById('staff-login-pass').value.trim();
+
+    if(!empId || !pass) {
+        showToast("Please enter Employee ID and password.", "error");
+        return;
+    }
+
+    let staffMembers = JSON.parse(localStorage.getItem('somaca_staff') || '{}');
+    let staff = staffMembers[empId];
+
+    if(staff && staff.password === pass) {
+        localStorage.setItem('somaca_current_staff', JSON.stringify(staff));
+        currentStaff = staff;
+        showToast(`Welcome to the Atelier, ${staff.name}`, "success");
+        openStaffDashboard();
     } else {
-        showToast("Invoice not found.", "error");
+        showToast("Invalid staff credentials or not registered.", "error");
+    }
+}
+
+function staffLogOut() {
+    currentStaff = null;
+    localStorage.removeItem('somaca_current_staff');
+    switchView('home-view');
+    showToast("Staff logged out successfully.", "success");
+}
+
+function openStaffDashboard() {
+    if(!currentStaff) {
+        switchView('staff-auth-view');
+        return;
+    }
+    document.getElementById('staff-welcome-msg').innerText = `Welcome, ${currentStaff.name} (${currentStaff.empId})`;
+    switchView('staff-dashboard-view');
+    renderStaffOrders();
+}
+
+function renderStaffOrders(filterText = '') {
+    const tbody = document.getElementById('staff-orders-body');
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+
+    // Reverse to show newest first
+    allOrders.reverse();
+
+    if(filterText) {
+        filterText = filterText.toLowerCase();
+        allOrders = allOrders.filter(o =>
+            o.orderId.toLowerCase().includes(filterText) ||
+            (o.name && o.name.toLowerCase().includes(filterText)) ||
+            (o.phone && o.phone.includes(filterText))
+        );
+    }
+
+    if(allOrders.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 20px; color: var(--text-muted);">No orders found.</td></tr>';
+        return;
+    }
+
+    let html = '';
+    allOrders.forEach(o => {
+        const currentStatus = o.status || 'Confirmed';
+        html += `
+            <tr class="staff-order-row">
+                <td>
+                    <div style="font-family: monospace; color: #fff;">${o.orderId}</div>
+                    <div style="color: var(--text-muted); font-size: 11px;">${o.date}</div>
+                </td>
+                <td>
+                    <div style="color: #fff;">${o.name || 'N/A'}</div>
+                    <div style="color: var(--text-muted); font-size: 11px;">${o.phone} | ${o.email}</div>
+                    <div style="color: var(--text-muted); font-size: 10px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${o.address}">${o.address}</div>
+                </td>
+                <td>
+                    <select class="glass-input" style="padding: 4px; font-size: 11px; margin-bottom: 5px; width: 100%;" onchange="updateOrderStatus('${o.orderId}', this.value)">
+                        <option value="Confirmed" ${currentStatus === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                        <option value="Processing" ${currentStatus === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Dispatched" ${currentStatus === 'Dispatched' ? 'selected' : ''}>Dispatched</option>
+                        <option value="In Transit" ${currentStatus === 'In Transit' ? 'selected' : ''}>In Transit</option>
+                        <option value="Delivered" ${currentStatus === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                    </select>
+                    <input type="text" class="glass-input" style="padding: 4px; font-size: 11px; width: 100%;" placeholder="Enter AWB" value="${o.awbNumber === 'Pending Dispatch' ? '' : o.awbNumber}" onblur="updateOrderAWB('${o.orderId}', this.value)">
+                </td>
+                <td>
+                    <div style="color: var(--gold); font-weight: bold; margin-bottom: 5px;">₹${o.total}</div>
+                </td>
+            </tr>
+        `;
+    });
+    tbody.innerHTML = html;
+}
+
+function filterStaffOrders() {
+    const input = document.getElementById('staff-search-input').value;
+    renderStaffOrders(input);
+}
+
+function updateOrderStatus(orderId, newStatus) {
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+    let orderIndex = allOrders.findIndex(o => o.orderId === orderId);
+    if(orderIndex > -1) {
+        allOrders[orderIndex].status = newStatus;
+        localStorage.setItem('somaca_orders', JSON.stringify(allOrders));
+        showToast(`Status updated to ${newStatus} for ${orderId}`, "success");
+    }
+}
+
+function updateOrderAWB(orderId, newAWB) {
+    if(!newAWB) return;
+    let allOrders = JSON.parse(localStorage.getItem('somaca_orders') || '[]');
+    let orderIndex = allOrders.findIndex(o => o.orderId === orderId);
+    if(orderIndex > -1 && allOrders[orderIndex].awbNumber !== newAWB) {
+        allOrders[orderIndex].awbNumber = newAWB;
+        localStorage.setItem('somaca_orders', JSON.stringify(allOrders));
+        showToast(`AWB updated for ${orderId}`, "success");
     }
 }

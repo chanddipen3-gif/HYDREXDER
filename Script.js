@@ -168,16 +168,29 @@ function addToWaitlist(categoryName) {
 }
 
 
+
 // ================= SCROLL REVEAL LOGIC =================
 const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
         if(entry.isIntersecting) {
             entry.target.classList.add('active');
+            observer.unobserve(entry.target);
         }
     });
-}, { threshold: 0.1 });
+}, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// Trigger reveal on load for elements already in viewport
+setTimeout(() => {
+    document.querySelectorAll('.reveal').forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if(rect.top < window.innerHeight) {
+            el.classList.add('active');
+            observer.unobserve(el);
+        }
+    });
+}, 100);
 
 // Init
 window.onload = () => {

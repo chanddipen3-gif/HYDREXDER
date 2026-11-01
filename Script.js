@@ -167,6 +167,18 @@ function addToWaitlist(categoryName) {
     showToast(`Added to exclusive VIP waitlist for ${categoryName}.`, "success");
 }
 
+
+// ================= SCROLL REVEAL LOGIC =================
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if(entry.isIntersecting) {
+            entry.target.classList.add('active');
+        }
+    });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
 // Init
 window.onload = () => {
         checkAuth();

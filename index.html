@@ -12,88 +12,121 @@
 <body>
 
     <!-- Top Navbar -->
-    <header>
-        <a href="#" class="brand-logo" onclick="switchView('home-view')">SOMACA</a>
-        <div class="nav-actions">
-            <button class="btn-auth-trigger" onclick="switchView('auth-view')" id="auth-btn">Sign In</button>
-            <button class="cart-badge-btn" onclick="switchView('checkout-view')">Cart <span id="cart-count">1</span></button>
+    <header class="gucci-header">
+        <a href="#" class="brand-logo gucci-logo" onclick="switchView('home-view')">S O M A C A</a>
+        <div class="nav-actions gucci-nav-actions">
+            <!-- Search Icon -->
+            <button class="icon-btn" onclick="toggleDrawer('search-drawer')" title="Search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+            <!-- User Profile Icon -->
+            <button class="icon-btn" onclick="openUserMenu()" title="Account">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </button>
+            <!-- Shopping Bag Icon -->
+            <button class="icon-btn cart-icon" onclick="switchView('checkout-view')" title="Cart">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span class="cart-badge" id="cart-count">0</span>
+            </button>
+            <!-- Hamburger Menu Icon -->
+            <button class="icon-btn" onclick="toggleDrawer('menu-drawer')" title="Menu">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
         </div>
     </header>
 
-    <div id="toast-container"></div>
+    <!-- Slide Down Search Drawer -->
+    <div id="search-drawer" class="drawer search-drawer">
+        <div class="drawer-content">
+            <input type="text" placeholder="Search SOMACA..." class="search-input" autofocus>
+            <button class="icon-btn" onclick="toggleDrawer('search-drawer')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+    </div>
 
-    <canvas id="particle-canvas"></canvas>
+    <!-- Slide Right Menu Drawer -->
+    <div id="menu-drawer" class="drawer menu-drawer">
+        <div class="drawer-header">
+            <span class="luxury-font" style="font-size: 1.2rem; letter-spacing: 2px;">MENU</span>
+            <button class="icon-btn" onclick="toggleDrawer('menu-drawer')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="24" height="24"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        <ul class="drawer-links">
+            <li><a href="#" onclick="addToWaitlist('Women\'s Fragrances'); toggleDrawer('menu-drawer')">Women's Fragrances</a></li>
+            <li><a href="#" onclick="addToWaitlist('Men\'s Fragrances'); toggleDrawer('menu-drawer')">Men's Fragrances</a></li>
+            <li><a href="#" onclick="addToWaitlist('Haute Couture Lipsticks'); toggleDrawer('menu-drawer')">Haute Couture Lipsticks</a></li>
+            <li><a href="#" onclick="addToWaitlist('Botanical Lip Balms'); toggleDrawer('menu-drawer')">Botanical Lip Balms</a></li>
+            <li><a href="#" onclick="addToWaitlist('Face Elixirs & Skincare'); toggleDrawer('menu-drawer')">Face Elixirs & Skincare</a></li>
+        </ul>
+    </div>
+
+    <div id="toast-container"></div>
 
     <!-- ================= 1. HOME VIEW (Full Website) ================= -->
     <div id="home-view" class="view-section active-view">
         
-        <div class="background-animation"></div>
+        <!-- Single Column Vertical Showcase -->
+        <main class="gucci-showcase">
 
-        <!-- Hero Section -->
-        <section class="hero reveal">
-            <video class="hero-video" autoplay loop muted playsinline>
-                <source src="https://cdn.pixabay.com/video/2021/08/11/84687-587843813_large.mp4" type="video/mp4">
-            </video>
-            <div class="hero-overlay"></div>
-            <div class="hero-content">
-                <div class="tag-sub">INTRODUCING SOMACA</div>
-                <h1 class="luxury-font">The Botanical<br>Facial Kit</h1>
-                <p>A single, perfect ritual. Pure earth ingredients. Visible luminous results.</p>
-                <button class="btn-main" onclick="switchView('checkout-view')">SHOP NOW — ₹199</button>
-                <div style="margin-top: 18px; font-size: 11px; letter-spacing: 2px; color: #777; text-transform: uppercase;">50G · 10 APPLICATIONS</div>
-            </div>
-        </section>
+            <!-- Category 1 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Women\'s Fragrances')">
+                <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&w=600&q=80" alt="Women's Fragrances" class="showcase-img">
+                <h2 class="showcase-title">Women's Fragrances</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
 
-        <!-- Single Product Showcase -->
-        <section class="product-section reveal" id="shop">
-            <div class="product-card-3d glass-panel-product">
-                <div class="product-img-box">
-                    <div class="price-tag-badge">₹199</div>
-                    <img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=600&q=80" alt="Botanical Facial Kit" style="width: 100%; height: 100%; object-fit: cover; opacity: 0.85;">
-                </div>
-                <h2 class="luxury-font product-title">Facial Treatment Kit</h2>
-                <p class="product-desc">Kaolin clay, organic rose petal powder, and pure neem extract. Deep detox in 10 minutes.</p>
-                <button class="btn-main" style="width: 100%;" onclick="switchView('checkout-view')">Add to Cart & Order</button>
-            </div>
-        </section>
+            <!-- Category 2 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Men\'s Fragrances')">
+                <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&w=600&q=80" alt="Men's Fragrances" class="showcase-img">
+                <h2 class="showcase-title">Men's Fragrances</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
 
-        <!-- Key Ingredients -->
-        <section class="content-container reveal">
-            <div class="tag-sub" style="text-align: center;">PURE FORMULATION</div>
-            <h2 class="luxury-font section-heading">Key Ingredients</h2>
-            <ul class="ingredients-grid">
-                <li><strong>Kaolin Clay</strong> — Deep-cleanses pores without stripping natural moisture.</li>
-                <li><strong>Rose Petal Powder</strong> — Natural antioxidant that brightens and soothes.</li>
-                <li><strong>Neem Leaf Extract</strong> — Antibacterial agent that calms blemishes and redness.</li>
-                <li><strong>Wild Turmeric</strong> — Evens out skin tone and enhances natural glow.</li>
-            </ul>
-        </section>
+            <!-- Category 3 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Haute Couture Lipsticks')">
+                <img src="https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=600&q=80" alt="Haute Couture Lipsticks" class="showcase-img">
+                <h2 class="showcase-title">Haute Couture Lipsticks</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
 
-        <!-- The Ritual (How to Use) -->
-        <section class="content-container reveal">
-            <div class="tag-sub" style="text-align: center;">THE RITUAL</div>
-            <h2 class="luxury-font section-heading">How to Use</h2>
+            <!-- Category 4 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Botanical Lip Balms')">
+                <img src="https://images.unsplash.com/photo-1629198688000-71f23e745b6e?auto=format&fit=crop&w=600&q=80" alt="Botanical Lip Balms" class="showcase-img">
+                <h2 class="showcase-title">Botanical Lip Balms</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
 
-            <div class="ritual-step">
-                <div class="ritual-num">01</div>
-                <p style="color: var(--text-muted); font-size: 14px;">Mix one teaspoon of powder with rose water to form a smooth paste.</p>
-            </div>
-            <div class="ritual-step">
-                <div class="ritual-num">02</div>
-                <p style="color: var(--text-muted); font-size: 14px;">Apply an even layer on cleansed face, avoiding eyes.</p>
-            </div>
-            <div class="ritual-step">
-                <div class="ritual-num">03</div>
-                <p style="color: var(--text-muted); font-size: 14px;">Leave on for 10–15 minutes until dry, then rinse with lukewarm water.</p>
-            </div>
-        </section>
+            <!-- Category 5 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Face Elixirs & Skincare')">
+                <img src="https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?auto=format&fit=crop&w=600&q=80" alt="Face Elixirs & Skincare" class="showcase-img">
+                <h2 class="showcase-title">Face Elixirs & Skincare</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
 
-        <!-- About Us Section (Moved to Bottom) -->
-        <section class="content-container reveal" style="padding-bottom: 20px;">
-            <div class="tag-sub" style="text-align: center;">OUR PHILOSOPHY</div>
-            <h2 class="luxury-font section-heading">About SOMACA</h2>
-            <p class="about-text">SOMACA stands for uncompromised purity in skincare. We reject chemical fillers and complex routines, bringing you back to sacred, earth-derived botanical rituals. Consciously crafted in India for modern luxury lovers.</p>
-        </section>
+            <!-- Category 6 -->
+            <section class="showcase-block reveal" onclick="addToWaitlist('Artisanal Eau De Parfum')">
+                <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80" alt="Artisanal Eau De Parfum" class="showcase-img">
+                <h2 class="showcase-title">Artisanal Eau De Parfum</h2>
+                <a href="#" class="showcase-link">Coming Soon</a>
+            </section>
+
+        </main>
 
         <!-- Footer -->
         <footer class="reveal">

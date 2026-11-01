@@ -31,7 +31,7 @@ let pendingAuthData = null;
 const EMPLOYEE_REGISTRY = {
     "SOM-101": { name: "Aditi Sharma", email: "aditi@somaca.com" },
     "SOM-102": { name: "Rohan Verma", email: "rohan@somaca.com" },
-    "SOM-103": { name: "Founder / Admin", email: "houseofsomaca@gmail.com" }
+    "SMC-976745@S": { name: "Founder / Admin", email: "houseofsomaca@gmail.com" }
 };
 
 // View Navigation
@@ -714,10 +714,13 @@ function switchStaffTab(tabId) {
     if (tabId === 'staff-orders-tab') {
         document.querySelector('#staff-dashboard-view .auth-tab:nth-child(1)').classList.add('active');
         document.getElementById('staff-orders-tab').style.display = 'block';
-    } else {
+    } else if (tabId === 'staff-hr-tab') {
         document.querySelector('#staff-dashboard-view .auth-tab:nth-child(2)').classList.add('active');
         document.getElementById('staff-hr-tab').style.display = 'block';
         loadHRMetrics();
+    } else if (tabId === 'staff-profile-tab') {
+        document.querySelector('#staff-dashboard-view .auth-tab:nth-child(3)').classList.add('active');
+        document.getElementById('staff-profile-tab').style.display = 'block';
     }
 }
 
@@ -732,7 +735,7 @@ function openStaffDashboard() {
     switchView('staff-dashboard-view');
 
     // RBAC
-    if(currentStaff.email === FOUNDER_EMAIL) {
+    if(currentStaff.email === FOUNDER_EMAIL || currentStaff.empId === "SMC-976745@S") {
         document.getElementById('hr-metrics-tab-btn').style.display = 'inline-block';
     } else {
         document.getElementById('hr-metrics-tab-btn').style.display = 'none';
@@ -880,4 +883,40 @@ function removeStaffMember(empId) {
     }).catch(e => {
         showToast("Error removing staff: " + e.message, "error");
     });
+}
+
+function staffChangePassword() {
+    const newPass = document.getElementById('staff-new-pass').value.trim();
+    if(!newPass || newPass.length < 6) {
+        showToast("Password must be at least 6 characters.", "error");
+        return;
+    }
+    const user = auth.currentUser;
+    if(user) {
+        user.updatePassword(newPass).then(() => {
+            showToast("Password updated successfully.", "success");
+            document.getElementById('staff-new-pass').value = '';
+        }).catch(e => {
+            showToast("Error updating password: " + e.message, "error");
+        });
+    } else {
+        showToast("No active user session found.", "error");
+    }
+}
+
+function staffForgotPassword() {
+    const user = auth.currentUser;
+    if(user && user.email) {
+        auth.sendPasswordResetEmail(user.email).then(() => {
+            showToast(`Password reset link sent to ${user.email}`, "success");
+        }).catch(e => {
+            showToast("Error sending reset link: " + e.message, "error");
+        });
+    } else {
+        showToast("Please contact support to reset your password.", "error");
+    }
+}
+
+function staffForgotId() {
+    showToast("Please contact the Founder (houseofsomaca@gmail.com) for ID/Email recovery.", "success");
 }

@@ -658,12 +658,12 @@ function staffRegister() {
         auth.createUserWithEmailAndPassword(email, pass)
             .then((userCredential) => {
                 // Pre-populate the registry so future queries work seamlessly
-                db.collection('staff_registry').doc(empId).set({ name: "Founder / Admin", email: email });
+                db.collection('staff_registry').doc(empId).set({ name: "Founder / Admin", email: email, role: "founder" });
                 showToast("Founder registered successfully. Please login.", "success");
                 toggleStaffAuth('signin');
             })
             .catch((error) => {
-                showToast(error.message, "error");
+                showToast("Firebase Error: " + error.message, "error");
             });
         return;
     }
@@ -696,18 +696,19 @@ function staffSignIn() {
         return;
     }
 
-    // Auto-allow Founder login if they exist in Auth but somehow got deleted from Firestore
-    if (empId === "SMC-976745@S") {
+    // Auto-allow Founder login (by ID or Email)
+    if (empId === "SMC-976745@S" || empId === FOUNDER_EMAIL) {
         auth.signInWithEmailAndPassword(FOUNDER_EMAIL, pass)
             .then((userCredential) => {
-                currentStaff = { name: "Founder / Admin", email: FOUNDER_EMAIL, empId: empId };
+                const verifiedEmpId = "SMC-976745@S";
+                currentStaff = { name: "Founder / Admin", email: FOUNDER_EMAIL, empId: verifiedEmpId, role: "founder" };
                 // Ensure registry exists
-                db.collection('staff_registry').doc(empId).set({ name: currentStaff.name, email: currentStaff.email });
+                db.collection('staff_registry').doc(verifiedEmpId).set({ name: currentStaff.name, email: currentStaff.email, role: "founder" }, { merge: true });
                 showToast(`Welcome to the Atelier, ${currentStaff.name}`, "success");
                 openStaffDashboard();
             })
             .catch((error) => {
-                showToast("Invalid password or not registered yet.", "error");
+                showToast("Firebase Error: " + error.message, "error");
             });
         return;
     }

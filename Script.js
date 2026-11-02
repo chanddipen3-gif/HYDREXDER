@@ -653,7 +653,22 @@ function staffRegister() {
         return;
     }
 
-    // Verify against registry in Firestore
+    // Auto-allow the hardcoded founder account to register
+    if (empId === "SMC-976745@S" && email === FOUNDER_EMAIL) {
+        auth.createUserWithEmailAndPassword(email, pass)
+            .then((userCredential) => {
+                // Pre-populate the registry so future queries work seamlessly
+                db.collection('staff_registry').doc(empId).set({ name: "Founder / Admin", email: email });
+                showToast("Founder registered successfully. Please login.", "success");
+                toggleStaffAuth('signin');
+            })
+            .catch((error) => {
+                showToast(error.message, "error");
+            });
+        return;
+    }
+
+    // Verify against registry in Firestore for standard staff
     db.collection('staff_registry').doc(empId).get().then((doc) => {
         if (doc.exists && doc.data().email === email) {
             auth.createUserWithEmailAndPassword(email, pass)
@@ -678,6 +693,22 @@ function staffSignIn() {
 
     if(!empId || !pass) {
         showToast("Please enter Employee ID and password.", "error");
+        return;
+    }
+
+    // Auto-allow Founder login if they exist in Auth but somehow got deleted from Firestore
+    if (empId === "SMC-976745@S") {
+        auth.signInWithEmailAndPassword(FOUNDER_EMAIL, pass)
+            .then((userCredential) => {
+                currentStaff = { name: "Founder / Admin", email: FOUNDER_EMAIL, empId: empId };
+                // Ensure registry exists
+                db.collection('staff_registry').doc(empId).set({ name: currentStaff.name, email: currentStaff.email });
+                showToast(`Welcome to the Atelier, ${currentStaff.name}`, "success");
+                openStaffDashboard();
+            })
+            .catch((error) => {
+                showToast("Invalid password or not registered yet.", "error");
+            });
         return;
     }
 
@@ -904,17 +935,53 @@ function staffChangePassword() {
     }
 }
 
-function staffForgotPassword() {
+
+function staffChangeEmail() {
+    const newEmail = document.getElementById('staff-new-email').value.trim();
+    if(!newEmail || !newEmail.includes('@')) {
+        showToast("Please enter a valid new email address.", "error");
+        return;
+    }
     const user = auth.currentUser;
-    if(user && user.email) {
-        auth.sendPasswordResetEmail(user.email).then(() => {
-            showToast(`Password reset link sent to ${user.email}`, "success");
+    if(user) {
+        user.updateEmail(newEmail).then(() => {
+            showToast("Email updated successfully.", "success");
+            document.getElementById('staff-new-email').value = '';
+
+            // Sync with staff registry
+            if(currentStaff && currentStaff.empId) {
+                db.collection('staff_registry').doc(currentStaff.empId).update({ email: newEmail });
+                currentStaff.email = newEmail;
+            }
         }).catch(e => {
-            showToast("Error sending reset link: " + e.message, "error");
+            showToast("Error updating email: " + e.message, "error");
         });
     } else {
-        showToast("Please contact support to reset your password.", "error");
+        showToast("No active user session found.", "error");
     }
+}
+
+function staffForgotPassword() {
+    const user = auth.currentUser;
+    let targetEmail = null;
+
+    if (user && user.email) {
+        targetEmail = user.email;
+    } else {
+        targetEmail = document.getElementById('staff-login-id').value.trim();
+        // Since login-id is the Emp ID, let's try to lookup the email, or if it's already an email format, use it.
+        // For simplicity, we'll ask the user to type their email in the input if they aren't logged in.
+        if(!targetEmail || !targetEmail.includes('@')) {
+            showToast("Please enter your official Email in the Employee ID field to reset password.", "error");
+            return;
+        }
+    }
+
+    auth.sendPasswordResetEmail(targetEmail).then(() => {
+        showToast(`Password reset link sent to ${targetEmail}`, "success");
+    }).catch(e => {
+        showToast("Error sending reset link: " + e.message, "error");
+    });
 }
 
 function staffForgotId() {
